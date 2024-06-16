@@ -1,21 +1,13 @@
-# Importing JDK and copying required files
-FROM openjdk:19-jdk AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src src
+FROM maven:3.8.5-openjdk-17 AS build
 
-# Copy Maven wrapper
-COPY mvnw .
-COPY .mvn .mvn
+COPY . .
 
-# Set execution permission for the Maven wrapper
-RUN chmod +x ./mvnw
+RUN mvn clean package -DskipTests
 
-# Stage 2: Create the final Docker image using OpenJDK 19
-FROM openjdk:19-jdk
-VOLUME /tmp
+FROM openjdk:17.0.1-jdk-slim
 
-# Copy the JAR from the build stage
-COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+COPY --from=build /target/mentormate-server-0.0.1-SNAPSHOT.jar demo.jar
+
 EXPOSE 8080
+
+ENTRYPOINT ["java","-jar","/app.jar"]
